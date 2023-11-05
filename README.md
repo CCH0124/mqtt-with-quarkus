@@ -133,4 +133,47 @@ Certificate:
 $ openssl verify -CAfile ca.crt intermediate-ca.crt
 intermediate-ca.crt: OK
 ```
-8. 
+8. End Entity CA
+
+```bash
+$ openssl genrsa -des3 -out end-entiry.key 4096\
+password a123456
+$ openssl req -sha256 -new -key endentity.key -out endentity.csr
+Enter pass phrase for end-entiry.key:
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:TW
+State or Province Name (full name) [Some-State]:
+Locality Name (eg, city) []:
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:Itachi Corp
+Organizational Unit Name (eg, section) []:Naruto Center
+Common Name (e.g. server FQDN or YOUR name) []:End Test Certificaate
+Email Address []:
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:
+An optional company name []:
+```
+
+9. 簽發 End Entity CA
+
+```bash
+$ openssl x509 -req -in end-entity.csr -CA intermediate-ca.crt -CAkey intermediate-ca.key -days 365 -out end-entity.crt
+Certificate request self-signature ok
+subject=C = TW, ST = Some-State, O = Itachi Corp, OU = Naruto Center, CN = End Test Certificaate
+Enter pass phrase for intermediate-ca.key:
+```
+
+10. CA bundle 與驗證
+
+```bash
+$ cat intermediate-ca.crt ca.crt > ca-bundle.crt
+$ openssl verify -CAfile ca-bundle.crt end-entity.crt
+end-entity.crt: OK
+```
