@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: emqx-dashboard-ingress
+spec:
+  ingressClassName: cilium
+  rules:
+  - host: emqx-dashboard.cch.com 
+    http:
+      paths:
+      - backend:
+          service:
+            name: emqx-dashboard
+            port:
+              number: 18083
+        path: /
+        pathType: Prefix

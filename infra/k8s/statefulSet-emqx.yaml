@@ -1,0 +1,91 @@
+apiVersion: apps.emqx.io/v2beta1
+kind: EMQX
+metadata:
+  name: emqx
+  labels:
+    apps.emqx.io/instance: emqx
+    apps.emqx.io/managed-by: emqx-operator
+spec:
+  image: "emqx:5.1"
+  imagePullPolicy: Always
+  revisionHistoryLimit: 3
+  config:
+    data: |
+      dashboard.listeners.http.bind = 18083
+      sysmon.vm.long_schedule = disabled
+  coreTemplate:
+    metadata:
+      name: emqx-core
+      labels:
+        apps.emqx.io/instance: emqx
+        apps.emqx.io/managed-by: emqx-operator
+        apps.emqx.io/db-role: core
+      annotations:
+    spec:
+      replicas: 2
+      affinity:
+      command:
+        - "/usr/bin/docker-entrypoint.sh"
+      args:
+        - "/opt/emqx/bin/emqx"
+        - "foreground"
+      ports:
+        - containerPort: 18083
+          name: dashboard
+          protocol: TCP
+      resources:
+        requests:
+          memory: "64Mi"
+          cpu: "125m"
+        limits:
+          memory: "1024Mi"
+          cpu: "500m"
+  replicantTemplate:
+    metadata:
+      name: emqx-replicant
+      labels:
+        apps.emqx.io/instance: emqx
+        apps.emqx.io/managed-by: emqx-operator
+        apps.emqx.io/db-role: replicant
+    spec:
+      replicas: 3
+      # affinity:
+      command:
+        - "/usr/bin/docker-entrypoint.sh"
+      args:
+        - "/opt/emqx/bin/emqx"
+        - "foreground"
+      ports:
+        - containerPort: 18083
+          name: dashboard
+      resources:
+        requests:
+          memory: "250Mi"
+          cpu: "250m"
+        limits:
+          memory: "1024Mi"
+          cpu: "500m"
+  dashboardServiceTemplate:
+    metadata:
+      name: emqx-dashboard
+      labels:
+        apps.emqx.io/instance: emqx
+        apps.emqx.io/managed-by: emqx-operator
+    spec:
+      selector:
+        apps.emqx.io/db-role: core
+      ports:
+        - name: "dashboard"
+          protocol: TCP
+          port: 18083
+          targetPort: 18083
+            #      type: LoadBalancer
+  listenersServiceTemplate:
+    metadata:
+      name: emqx-listeners
+      labels:
+        apps.emqx.io/instance: emqx
+        apps.emqx.io/managed-by: emqx-operator
+    spec:
+      selector:
+        apps.emqx.io/db-role: replicant
