@@ -1,0 +1,11 @@
+version: 3.7
+
+services:
+  mqtt-share-topic:
+    image: docker.io/cch0124/mqtt-share-topic-camel:latest
+    restart: always
+    environment:
+      - MQTT_BROKER_URL=tcp://192.168.235.210:1883
+      - MQTT_TOPIC=itachi/status
+    deploy:
+      replicas: 2
